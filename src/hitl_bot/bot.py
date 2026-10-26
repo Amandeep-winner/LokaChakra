@@ -165,3 +165,26 @@ def create_dispatcher(osint_app_instance: Optional[Any] = None) -> Dispatcher:
     dp = Dispatcher()
     dp.include_router(router)
     return dp
+
+
+async def start_bot() -> None:
+    """
+    Initializes and starts the Telegram HITL long-polling bot session.
+    """
+    if not settings.TELEGRAM_BOT_TOKEN or settings.TELEGRAM_BOT_TOKEN in ("none", "placeholder", ""):
+        print("[HITL Bot] Notice: TELEGRAM_BOT_TOKEN is not configured in .env.")
+        print("[HITL Bot] Please set a valid TELEGRAM_BOT_TOKEN to start the Telegram bot.")
+        return
+
+    logger.info("Starting Telegram HITL Bot...", user_id=settings.TELEGRAM_ALLOWED_USER_ID)
+    bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
+    dp = create_dispatcher()
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await bot.session.close()
+
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(start_bot())

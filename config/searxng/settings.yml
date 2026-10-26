@@ -1,0 +1,9 @@
+use_default_settings: true
+search:
+  safe_search: 0
+  formats:
+    - html
+    - json
+server:
+  secret_key: "lokachakra_searxng_local_secret"
+  limiter: false

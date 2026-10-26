@@ -1,0 +1,39 @@
+# Multi-arch base supporting linux/amd64 and linux/arm64
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_SYSTEM_PYTHON=1 \
+    PORT=8000
+
+# Install system dependencies including ffmpeg for audio transcription
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    build-essential \
+    libpq-dev \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv from official image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /app
+
+# Copy dependency definition
+COPY pyproject.toml README.md /app/
+
+# Install dependencies using uv
+RUN uv pip install --system -e ".[dev]"
+
+# Install Playwright browser and system dependencies
+RUN python -m playwright install --with-deps chromium
+
+# Copy application source code and configurations
+COPY src/ /app/src/
+COPY config/ /app/config/
+COPY scripts/ /app/scripts/
+
+EXPOSE 8000
+
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

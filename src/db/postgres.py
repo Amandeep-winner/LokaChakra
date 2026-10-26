@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from pgvector.sqlalchemy import Vector
 
@@ -100,8 +101,7 @@ class HITLEvidenceCardModel(Base):
 engine = create_async_engine(
     settings.POSTGRES_URI,
     echo=False,
-    pool_size=10,
-    max_overflow=20,
+    poolclass=NullPool,
 )
 
 async_session_factory = async_sessionmaker(

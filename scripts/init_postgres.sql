@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS person_staging (
     github_handle VARCHAR(128),
     x_handle VARCHAR(128),
     current_org VARCHAR(255),
-    current_role VARCHAR(255),
+    "current_role" VARCHAR(255),
     alumni_orgs JSONB DEFAULT '[]'::jsonb,
     location_city VARCHAR(128),
     reachability_tier SMALLINT DEFAULT 2,

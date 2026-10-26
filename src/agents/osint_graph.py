@@ -42,7 +42,7 @@ async def run_web_recon(state: OSINTState) -> Dict[str, Any]:
 
     # If search_results already provided (e.g., injected in tests or pre-computed), preserve them
     existing_results = state.get("search_results")
-    if existing_results is not None and len(existing_results) > 0:
+    if existing_results is not None:
         return {"search_results": existing_results}
 
     results = await execute_osint_queries(

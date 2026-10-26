@@ -100,13 +100,34 @@ async def ingest_text(payload: TextIngestRequest) -> EpisodeExtractionResult:
             for org in result.organizations:
                 await session.execute_write(upsert_organization, org)
 
-            # Upsert persons
+            # Upsert persons and map their names to UIDs
+            person_uid_map: Dict[str, str] = {
+                "self_user": "00000000-0000-0000-0000-000000000001",
+                "i": "00000000-0000-0000-0000-000000000001",
+                "me": "00000000-0000-0000-0000-000000000001",
+            }
             for person in result.persons:
-                await session.execute_write(upsert_verified_person, person)
+                if person.full_name == "SELF_USER":
+                    person.uid = uuid.UUID("00000000-0000-0000-0000-000000000001")
+                uid = await session.execute_write(upsert_verified_person, person)
+                person_uid_map[person.full_name.strip().lower()] = str(uid)
+                for alias in (person.aliases or []):
+                    person_uid_map[alias.strip().lower()] = str(uid)
 
             # Upsert edges
-            for edge in result.relationships:
-                await session.execute_write(upsert_temporal_edge, edge)
+            episode_id_str = str(result.episode_id)
+            for edge in result.edges:
+                src_key = edge.source_name.strip().lower()
+                source_uid = person_uid_map.get(src_key, "00000000-0000-0000-0000-000000000001")
+                tgt_key = edge.target_name.strip().lower()
+                target_id = person_uid_map.get(tgt_key, edge.target_name.strip())
+                await session.execute_write(
+                    upsert_temporal_edge,
+                    source_uid,
+                    target_id,
+                    edge,
+                    episode_id_str,
+                )
 
         return result
     except Exception as exc:
